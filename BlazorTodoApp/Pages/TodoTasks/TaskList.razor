@@ -1,0 +1,80 @@
+﻿@page "/TodoTasks"
+
+<h1 class="mb-3">TaskList</h1>
+
+@if(todoTasks == null){
+	<p><em>Loading..</em></p>
+}else{
+	<a class="btn btn-primary mb-3 me-2" href="/TodoTasks/Create">Add Task</a>
+
+	<div class="container">
+		@foreach (var tdt in todoTasks)
+		{
+			<div class="row">
+				<div class="col-12">
+					<div class="card mb-3 shadow-sm p-3">
+						<div class="card-body">
+							<!-- Name and Description with Dates on Right -->
+							<div class="d-flex justify-content-between align-items-center">
+								<div>
+									<h4 class="card-title mb-1">@tdt.Name</h4>
+									<p class="card-text text-muted">@tdt.Description</p>
+								</div>
+								<div class="text-end">
+									<p class="mb-1"><strong>Created:</strong> @tdt.Created.ToShortDateString()</p>
+									<p class="mb-0"><strong>Due:</strong> @tdt.DueDate?.ToShortDateString()</p>
+								</div>
+							</div>
+
+							<!-- Category & Status on Left | Buttons on Right -->
+							<div class="d-flex justify-content-between align-items-center mt-3">
+								<div>
+									<span class="badge bg-secondary">Category @tdt.CategoryId</span>
+									@if (tdt.IsCompleted)
+									{
+										<span class="badge bg-success ms-2">Completed</span>
+									}
+									else
+									{
+										<span class="badge bg-warning text-dark ms-2">Not Completed</span>
+									}
+								</div>
+
+								<div>
+									<a class="btn btn-primary btn-sm" href="/TodoTasks/Edit/@tdt.Id">Edit</a>
+									<button class="btn btn-danger btn-sm" @onclick="async () => await DeleteTask(tdt.Id)">
+										Delete
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+}
+
+@inject HttpClient http
+
+@code {
+	private List<TodoTasks>? todoTasks;
+
+	protected override async Task OnInitializedAsync(){
+		// todoTasks = await http.GetFromJsonAsync<List<TodoTasks>>("api/TodoTask");
+		try
+		{
+			todoTasks = await http.GetFromJsonAsync<List<TodoTasks>>("api/TodoTask");
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error fetching data: {ex.Message}");
+		}
+	}
+
+	private async Task DeleteTask(int id)
+	{
+		await http.DeleteAsync("api/TodoTask/" + id);
+		todoTasks = await http.GetFromJsonAsync<List<TodoTasks>>("api/TodoTask");
+	}
+}

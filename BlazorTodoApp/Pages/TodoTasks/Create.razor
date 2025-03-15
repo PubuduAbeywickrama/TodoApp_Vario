@@ -1,0 +1,78 @@
+﻿@page "/TodoTasks/Create"
+
+<div class="row mb-5">
+	<div class="col-lg-8">
+		<h1 class="mb-5">Add New Task</h1>
+
+		<div class="row mb-3">
+			<lable class="col-md-4 col-form-label">Task </lable>
+			<div class="col-md-8">
+				<input class="form-control" @bind="TodoTaskDtoData.Name" />
+				<span class="text-danger">@Errors["Name"]?[0]</span>
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<lable class="col-md-4 col-form-label">Description </lable>
+			<div class="col-md-8">
+				<input class="form-control" @bind="TodoTaskDtoData.Description" />
+				<span class="text-danger">@Errors["Description"]?[0]</span>
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<lable class="col-md-4 col-form-label">Crated Date </lable>
+			<div class="col-md-8">
+				<input type="datetime-local" class="form-control" @bind="TodoTaskDtoData.Created" />
+			</div>
+		</div>
+
+		<div class="row mb-3">
+			<lable class="col-md-4 col-form-label">Due Date</lable>
+			<div class="col-md-8">
+				<input type="datetime-local" class="form-control" @bind="TodoTaskDtoData.DueDate" />
+				<span class="text-danger">@Errors["DueDate"]?[0]</span>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="offset-md-4 col-md-4 d-grid">
+				<button class="btn btn-primary" @onclick="SaveTask">Save</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+@inject HttpClient http
+@inject NavigationManager navmanager
+
+@using System.Text.Json.Nodes
+
+@code {
+	public TodoTasksDto TodoTaskDtoData { get; set; } = new();
+	public JsonNode Errors { get; set; } = new JsonObject();
+
+	private async Task SaveTask(MouseEventArgs e)
+	{
+		var response = await http.PostAsJsonAsync("api/TodoTask", TodoTaskDtoData);
+
+		if(response.IsSuccessStatusCode)
+		{
+			navmanager.NavigateTo("TodoTasks");
+		}
+		else
+		{
+			var strResponse = await response.Content.ReadAsStringAsync();
+
+			try
+			{
+				var jsonResponse = JsonNode.Parse(strResponse);
+				Errors = jsonResponse?["errors"] ?? new JsonObject();
+			}
+			catch (Exception ex)
+			{
+
+			}
+		}
+	}
+}

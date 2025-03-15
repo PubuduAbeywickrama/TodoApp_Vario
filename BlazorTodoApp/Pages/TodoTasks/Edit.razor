@@ -1,0 +1,111 @@
+﻿@page "/TodoTasks/Edit/{Id:int}"
+
+<div class="row mb-5">
+	<div class="col-lg-8">
+		<h1 class="mb-5">Edit Task</h1>
+
+		@if(todoTaskData == null){
+			<p><em>Loading..</em></p>
+		}else{
+			<div class="row mb-3">
+				<lable class="col-md-4 col-form-label">Task Id </lable>
+				<div class="col-md-8">
+					<input class="form-control-plaintext" value="@Id" />
+				</div>
+			</div>
+
+			<div class="row mb-3">
+				<lable class="col-md-4 col-form-label">Task </lable>
+				<div class="col-md-8">
+					<input class="form-control" @bind="TodoTaskDtoData.Name" />
+					<span class="text-danger">@Errors["Name"]?[0]</span>
+				</div>
+			</div>
+
+			<div class="row mb-3">
+				<lable class="col-md-4 col-form-label">Description </lable>
+				<div class="col-md-8">
+					<input class="form-control" @bind="TodoTaskDtoData.Description" />
+					<span class="text-danger">@Errors["Description"]?[0]</span>
+				</div>
+			</div>
+
+			<div class="row mb-3">
+				<lable class="col-md-4 col-form-label">Crated Date </lable>
+				<div class="col-md-8">
+					<input type="datetime-local" class="form-control" @bind="TodoTaskDtoData.Created" />
+				</div>
+			</div>
+
+			<div class="row mb-3">
+				<lable class="col-md-4 col-form-label">Due Date</lable>
+				<div class="col-md-8">
+					<input type="datetime-local" class="form-control" @bind="TodoTaskDtoData.DueDate" />
+					<span class="text-danger">@Errors["DueDate"]?[0]</span>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="offset-md-4 col-md-4 d-grid">
+					<button class="btn btn-primary" @onclick="SaveTask">Save</button>
+				</div>
+			</div>
+		}
+
+		
+	</div>
+</div>
+
+@inject HttpClient http
+@inject NavigationManager navManager
+
+@using System.Text.Json.Nodes
+
+@code {
+	[Parameter]
+	public int Id { get; set; }
+
+	public TodoTasks? todoTaskData = null;
+	public TodoTasksDto TodoTaskDtoData { get; set; } = new();
+	public JsonNode Errors { get; set; } = new JsonObject();
+
+	protected override async Task OnParametersSetAsync()
+	{
+		try
+		{
+			todoTaskData = await http.GetFromJsonAsync<TodoTasks>("api/TodoTask/" + Id);
+			TodoTaskDtoData.Name = todoTaskData?.Name ?? "";
+			TodoTaskDtoData.Description = todoTaskData?.Description ?? "";
+			TodoTaskDtoData.Created = todoTaskData?.Created ?? DateTime.Now;
+			TodoTaskDtoData.DueDate = todoTaskData?.DueDate;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine("Error : {ex.Message}");
+		}
+	}
+
+	private async Task SaveTask(MouseEventArgs e)
+	{
+		var response = await http.PutAsJsonAsync("api/TodoTask/" + Id, TodoTaskDtoData);
+
+		if (response.IsSuccessStatusCode)
+		{
+			navManager.NavigateTo("TodoTasks");
+		}
+		else
+		{
+			var strResponse = await response.Content.ReadAsStringAsync();
+
+			try
+			{
+				var jsonResponse = JsonNode.Parse(strResponse);
+				Errors = jsonResponse?["errors"] ?? new JsonObject();
+			}
+			catch (Exception ex)
+			{
+
+			}
+		}
+	}
+}

@@ -13,7 +13,6 @@ namespace TodoApi.Models
         public DateTime? DueDate { get; set; }
         public bool IsCompleted { get; set; }
         public int CategoryId { get; set; }
-        [Required]
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
     }
 }
