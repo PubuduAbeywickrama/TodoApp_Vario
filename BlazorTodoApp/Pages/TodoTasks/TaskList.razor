@@ -106,7 +106,7 @@
 }
 
 @inject HttpClient http
-
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 
 @code {
     private List<TodoTasks>? todoTasks;
@@ -126,12 +126,14 @@
     {
 		FilterTasks();
 	}
+
 	private async Task DeleteTask(int id)
 	{
 		await http.DeleteAsync("api/TodoTask/" + id);
 		todoTasks = await http.GetFromJsonAsync<List<TodoTasks>>("api/TodoTask");
 		FilterTasks();
 	}
+
 	private void FilterTasks()
 	{
 		if (todoTasks == null) return;
@@ -144,6 +146,7 @@
 					(selectedStatus == "Not Completed" && !t.IsCompleted))
 			).ToList();
 	}
+
 	private async Task MarkAsCompleted(int id)
 	{
 		var response = await http.PatchAsync($"api/TodoTask/{id}/complete", null);
@@ -172,7 +175,6 @@
                 url += $"?status={selectedStatus}";
             }
 
-            // Get tasks from API
             var tasks = await http.GetFromJsonAsync<List<TodoTasks>>(url);
 
             if (tasks != null)
@@ -185,7 +187,7 @@
                 todoTasks = new List<TodoTasks>();
                 filteredTasks = new List<TodoTasks>();
             }
-
+            await SaveTasksToStorage();
             StateHasChanged();
         }
         catch (Exception ex)
@@ -200,5 +202,9 @@
 		await LoadTasks();
 	}
 
+    private async Task SaveTasksToStorage()
+    {
+        await localStorage.SetItemAsync("todoTasks", todoTasks);
+    }
 
 }
