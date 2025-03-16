@@ -96,6 +96,14 @@
 									<button class="btn btn-danger btn-sm" @onclick="async () => await DeleteTask(tdt.Id)">
 										Delete
 									</button>
+
+									<!-- Mark As Completed Button -->
+									@if (!tdt.IsCompleted && DateTime.Now >= tdt.Created && DateTime.Now <= tdt.DueDate)
+									{
+										<button class="btn btn-success btn-sm" @onclick="async () => await MarkAsCompleted(tdt.Id)">
+											Mark As Completed
+										</button>
+									}
 								</div>
 							</div>
 						</div>
@@ -145,6 +153,7 @@
 	{
 		await http.DeleteAsync("api/TodoTask/" + id);
 		todoTasks = await http.GetFromJsonAsync<List<TodoTasks>>("api/TodoTask");
+		FilterTasks();
 	}
 	private void FilterTasks()
 	{
@@ -157,5 +166,21 @@
 					(selectedStatus == "Completed" && t.IsCompleted) ||
 					(selectedStatus == "Not Completed" && !t.IsCompleted))
 			).ToList();
+	}
+	private async Task MarkAsCompleted(int id)
+	{
+		var response = await http.PatchAsync($"api/TodoTask/{id}/complete", null);
+		if (response.IsSuccessStatusCode)
+		{
+			var task = todoTasks?.FirstOrDefault(t => t.Id == id);
+			if (task != null)
+			{
+				task.IsCompleted = true;
+				task.CompleteDate = DateTime.Now;
+			}
+
+			FilterTasks(); // Refresh UI
+			StateHasChanged(); // Force UI update
+		}
 	}
 }

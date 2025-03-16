@@ -11,5 +11,6 @@ namespace BlazorTodoApp.Models
         public bool IsCompleted { get; set; } = false;
         public int CategoryId { get; set; } = 4;
         public string? UserId { get; set; } = "U002";
+        public DateTime? CompleteDate { get; set; }
     }
 }

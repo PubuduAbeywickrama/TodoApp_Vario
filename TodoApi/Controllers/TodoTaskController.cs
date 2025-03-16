@@ -78,5 +78,30 @@ namespace TodoApi.Controllers
             context.SaveChanges();
             return Ok();
         }
+
+        [HttpPatch("{Id}/complete")]
+        public IActionResult MarkAsCompleted(int Id)
+        {
+            var todotask = context.TodoTasks.Find(Id);
+            if (todotask == null) return NotFound();
+
+            if (todotask.IsCompleted)
+            {
+                return BadRequest("Task is already completed.");
+            }
+
+            if (todotask.DueDate < DateTime.Now)
+            {
+                return BadRequest("Cannot complete a task past its due date.");
+            }
+
+            todotask.IsCompleted = true;
+            todotask.CompleteDate = DateTime.Now;
+            context.SaveChanges();
+
+            return Ok(todotask);
+        }
+
+
     }
 }
