@@ -18,11 +18,44 @@ namespace TodoApi.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetTodoTasks()
+        public IActionResult GetTodoTasks([FromQuery] string? status)
         {
-            var todoTasks = context.TodoTasks.OrderByDescending(t => t.Id).ToList();
-            return Ok(todoTasks);
+            var todoTasks = context.TodoTasks.AsQueryable();
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                if (status == "Completed")
+                    todoTasks = todoTasks.Where(t => t.IsCompleted);
+                else if (status == "Not Completed")
+                    todoTasks = todoTasks.Where(t => !t.IsCompleted);
+            }
+
+            var result = todoTasks.OrderByDescending(t => t.Id).ToList();
+            return Ok(result);
         }
+
+        [HttpGet("filter")]
+        public IActionResult GetFilteredTasks([FromQuery] int? categoryId, [FromQuery] string? status)
+        {
+            var query = context.TodoTasks.AsQueryable();
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(t => t.CategoryId == categoryId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                if (status == "Completed")
+                    query = query.Where(t => t.IsCompleted);
+                else if (status == "Not Completed")
+                    query = query.Where(t => !t.IsCompleted);
+            }
+
+            var filteredTasks = query.OrderByDescending(t => t.Id).ToList();
+            return Ok(filteredTasks);
+        }
+
 
         [HttpGet("{Id}")]
         public IActionResult GetTodoTask(int Id) 
